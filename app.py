@@ -71,7 +71,7 @@ def generar_imagen_tabla(df_top, tipo_combustible):
         elif col == 3: cell.set_width(0.33) 
         elif col == 4: cell.set_width(0.15) 
             
-    titulo = "Top 10 Gasolineras más baratas (Península) - Gasolina 95" if tipo_combustible == 'gasolina' else "Top 10 Gasolineras más baratas (Península) - Diésel"
+    titulo = "Gasolineras más baratas - Gasolina 95" if tipo_combustible == 'gasolina' else "Gasolineras más baratas - Diésel"
     plt.figtext(0.10, 0.88, titulo, fontsize=18, fontweight='bold', color=COLOR_CABECERA, fontfamily='sans-serif')
     
     if os.path.exists("logo.png"):
