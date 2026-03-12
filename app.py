@@ -7,7 +7,7 @@ import io
 st.set_page_config(page_title="Generador Gasolineras", layout="wide")
 
 st.title("⛽ Generador: Gasolineras más baratas de España")
-st.markdown("Sube el archivo `.xls` o `.csv` descargado del MITECO. El sistema procesará los datos y te mostrará el texto formateado para que solo tengas que **seleccionarlo con el ratón, copiarlo y pegarlo** directamente en la vista visual de tu editor.")
+st.markdown("Sube el archivo `.xls` o `.csv` descargado del MITECO. El sistema generará un Top nacional (Península) y el listado provincial para que lo copies visualmente a tu editor.")
 
 # Componente para subir el archivo
 uploaded_file = st.file_uploader("Arrastra aquí tu archivo", type=['xls', 'xlsx', 'csv'])
@@ -65,10 +65,50 @@ if uploaded_file is not None:
                 df['Provincia'] = df['Provincia'].astype(str).str.title()
                 provincias = sorted([p for p in df['Provincia'].unique() if p.lower() not in ['nan', '']])
 
-                # --- GENERACIÓN DE LA ESTRUCTURA ---
                 html_lines = []
-                html_lines.append("<h2>Las gasolineras más baratas por provincias para echar gasolina o diesel</h2>")
-                html_lines.append("<p>En la web del Ministerio para la Transición Ecológica (MITECO), en su sección de “Precio de carburantes en las gasolineras españolas”, se puede consultar cuáles son las gasolineras más baratas en cada provincia española. El siguiente listado muestra las gasolineras con los precios más bajos en todas las provincias de España.</p>")
+
+                # -----------------------------------------------------------------
+                # 1. TOP PENÍNSULA (Excluyendo islas y ciudades autónomas)
+                # -----------------------------------------------------------------
+                provincias_fuera = ['Ceuta', 'Melilla', 'Balears (Illes)', 'Santa Cruz De Tenerife', 'Palmas (Las)']
+                df_peninsula = df[~df['Provincia'].isin(provincias_fuera)]
+
+                html_lines.append("<h2>Top 5: Las gasolineras más baratas de la Península</h2>")
+                html_lines.append("<p>Listado de las estaciones de servicio con los precios más bajos en la España peninsular (excluyendo Baleares, Canarias, Ceuta y Melilla).</p>")
+
+                # Top 5 Gasolina Península
+                html_lines.append("<h3>⛽ Top 5 Gasolina 95 E5 más barata</h3>")
+                html_lines.append("<ul>")
+                top_gas = df_peninsula.dropna(subset=['Precio gasolina 95 E5']).sort_values('Precio gasolina 95 E5').head(5)
+                for _, row in top_gas.iterrows():
+                    provincia = str(row['Provincia'])
+                    localidad = str(row['Localidad']).title() if pd.notna(row['Localidad']) and row['Localidad'] != '' else ""
+                    rotulo = str(row['Rótulo']) if pd.notna(row['Rótulo']) and row['Rótulo'] != '' else "SIN ROTULO"
+                    direccion = str(row['Dirección']).title() if pd.notna(row['Dirección']) and row['Dirección'] != '' else ""
+                    precio = f"{row['Precio gasolina 95 E5']:.3f}"
+                    html_lines.append(f"    <li><strong>{localidad} ({provincia})</strong>: {rotulo}, {direccion} - <strong>{precio} &euro;/L</strong></li>")
+                html_lines.append("</ul>")
+
+                # Top 5 Diésel Península
+                html_lines.append("<h3>🛢️ Top 5 Diésel (Gasóleo A) más barato</h3>")
+                html_lines.append("<ul>")
+                top_die = df_peninsula.dropna(subset=['Precio gasóleo A']).sort_values('Precio gasóleo A').head(5)
+                for _, row in top_die.iterrows():
+                    provincia = str(row['Provincia'])
+                    localidad = str(row['Localidad']).title() if pd.notna(row['Localidad']) and row['Localidad'] != '' else ""
+                    rotulo = str(row['Rótulo']) if pd.notna(row['Rótulo']) and row['Rótulo'] != '' else "SIN ROTULO"
+                    direccion = str(row['Dirección']).title() if pd.notna(row['Dirección']) and row['Dirección'] != '' else ""
+                    precio = f"{row['Precio gasóleo A']:.3f}"
+                    html_lines.append(f"    <li><strong>{localidad} ({provincia})</strong>: {rotulo}, {direccion} - <strong>{precio} &euro;/L</strong></li>")
+                html_lines.append("</ul>")
+                
+                html_lines.append("<hr>") # Una línea separadora visual
+
+                # -----------------------------------------------------------------
+                # 2. LISTADO POR PROVINCIAS (Todas)
+                # -----------------------------------------------------------------
+                html_lines.append("<h2>Las gasolineras más baratas por provincia</h2>")
+                html_lines.append("<p>En la web del Ministerio para la Transición Ecológica (MITECO), se puede consultar cuáles son las gasolineras más baratas en cada provincia. El siguiente listado muestra las estaciones con los precios más bajos en toda España.</p>")
 
                 for prov in provincias:
                     html_lines.append(f"<h3>{prov}</h3>")
@@ -99,11 +139,11 @@ if uploaded_file is not None:
                 # Unimos todo en un solo bloque
                 html_final = "\n".join(html_lines)
 
-            st.success("✅ ¡Listado generado con éxito!")
+            st.success("✅ ¡Listados generados con éxito!")
             
-            st.info("👇 **Instrucciones:** Selecciona todo el texto que aparece debajo del recuadro con el ratón (desde el título hasta la última provincia), cópialo (**Ctrl+C** o **Cmd+C**) y pégalo directamente en la vista visual de tu editor Easywing. El formato de listas y títulos se mantendrá intacto.")
+            st.info("👇 **Instrucciones:** Selecciona todo el texto que aparece debajo de la línea con el ratón, cópialo (**Ctrl+C** o **Cmd+C**) y pégalo directamente en tu editor Easywing.")
             
-            # Mostramos el resultado renderizado de forma visual y limpia
+            # Mostramos el resultado
             st.markdown("---")
             st.markdown(html_final, unsafe_allow_html=True)
             st.markdown("---")
