@@ -162,7 +162,7 @@ if uploaded_file is not None:
                                    "<p>En la web del Ministerio para la Transición Ecológica (MITECO), se puede consultar cuáles son las gasolineras más baratas en cada provincia. El siguiente listado muestra las estaciones con los precios más bajos en toda España.</p>"])
 
                 for prov in provincias:
-                    html_lines.extend([f"<h3>{prov}</h3>", "<ul>"])
+                    html_lines.extend([f"<p><strong>{prov}</strong></p>", "<ul>"])
                     df_prov = df[df['Provincia'] == prov]
                     
                     for _, row in df_prov.dropna(subset=['Precio gasolina 95 E5']).sort_values('Precio gasolina 95 E5').head(2).iterrows():
